@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Budget Balancer
 
 A multipage budget balancer web app. Users sign up / log in, add transactions, and
@@ -81,3 +82,6 @@ All `/transactions` routes require an `Authorization: Bearer <token>` header.
 
 `type` must be `"income"` or `"expense"`. The savings figure is derived as
 `income − expense` and recomputed on every fetch.
+=======
+# Budget_Balancer
+>>>>>>> d88fbc956b2d0436a7d29aef8032f0d8e9174ed2
