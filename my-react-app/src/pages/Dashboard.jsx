@@ -16,8 +16,14 @@ export default function Dashboard() {
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Hi {user?.name}, here's your balance</h1>
-        <p className="muted">Every transaction is split into income, expense and savings.</p>
+        <p className="page-eyebrow">Dashboard</p>
+        <h1>
+          Hi {user?.name}
+          <span className="page-head-accent">, here's your balance</span>
+        </h1>
+        <p className="muted page-sub">
+          Track income and expenses — savings are calculated automatically.
+        </p>
       </header>
 
       <SummaryCards summary={summary} />

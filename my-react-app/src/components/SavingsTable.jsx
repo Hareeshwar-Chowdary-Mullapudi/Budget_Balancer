@@ -5,28 +5,28 @@ export default function SavingsTable({ income = 0 }) {
 
   return (
     <section className="card savings-table-card">
-      <h2>Recommended savings by income</h2>
-      <p className="muted small">
-        Instead of a fixed 50/30/20 rule, the target savings % scales with your income.
+      <div className="card-title-row">
+        <span className="card-icon" aria-hidden="true">
+          📊
+        </span>
+        <h2>Savings guide</h2>
+      </div>
+      <p className="muted small card-desc">
+        Target savings % scales with your income bracket — not a fixed 50/30/20 rule.
       </p>
-      <table className="savings-table">
-        <thead>
-          <tr>
-            <th>Monthly income</th>
-            <th>Recommended savings</th>
-          </tr>
-        </thead>
-        <tbody>
-          {SAVINGS_BRACKETS.map((b) => (
-            <tr key={b.label} className={active && active.label === b.label ? 'active-row' : ''}>
-              <td>{b.label}</td>
-              <td>
+      <ul className="bracket-list">
+        {SAVINGS_BRACKETS.map((b) => {
+          const isActive = active && active.label === b.label
+          return (
+            <li key={b.label} className={`bracket-row ${isActive ? 'active' : ''}`}>
+              <span className="bracket-income">{b.label}</span>
+              <span className="bracket-pct">
                 {b.minPct}–{b.maxPct}%
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </span>
+            </li>
+          )
+        })}
+      </ul>
     </section>
   )
 }

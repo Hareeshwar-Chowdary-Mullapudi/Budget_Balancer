@@ -38,15 +38,23 @@ export default function TransactionForm({ onAdded }) {
 
   return (
     <form className="card tx-form" onSubmit={handleSubmit}>
-      <h2>Add transaction</h2>
+      <div className="card-title-row">
+        <span className="card-icon" aria-hidden="true">
+          ✏️
+        </span>
+        <h2>Add transaction</h2>
+      </div>
       {error && <div className="alert alert-error">{error}</div>}
 
-      <div className="type-toggle">
+      <div className="type-toggle" role="group" aria-label="Transaction type">
         <button
           type="button"
           className={`type-btn ${type === 'income' ? 'active income' : ''}`}
           onClick={() => setType('income')}
         >
+          <span className="type-btn-icon" aria-hidden="true">
+            +
+          </span>
           Income
         </button>
         <button
@@ -54,6 +62,9 @@ export default function TransactionForm({ onAdded }) {
           className={`type-btn ${type === 'expense' ? 'active expense' : ''}`}
           onClick={() => setType('expense')}
         >
+          <span className="type-btn-icon" aria-hidden="true">
+            −
+          </span>
           Expense
         </button>
       </div>

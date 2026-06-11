@@ -1,5 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import ThemeToggle from './ThemeToggle'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -17,6 +18,7 @@ export default function Navbar() {
       </Link>
 
       <div className="nav-links">
+        <ThemeToggle />
         {user ? (
           <>
             <NavLink to="/dashboard">Dashboard</NavLink>

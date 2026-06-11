@@ -2,13 +2,22 @@ import { formatMoney, formatDate } from '../utils/format'
 
 export default function TransactionList({ transactions, onDelete }) {
   if (!transactions?.length) {
-    return <p className="muted empty">No transactions yet. Add your first one above.</p>
+    return (
+      <div className="empty-state empty-state-compact">
+        <span className="empty-state-icon" aria-hidden="true">
+          📋
+        </span>
+        <p className="empty-state-title">No transactions yet</p>
+        <p className="muted small">Your recent activity will show up here.</p>
+      </div>
+    )
   }
 
   return (
     <ul className="tx-list">
       {transactions.map((t) => (
         <li key={t._id} className={`tx-item ${t.type}`}>
+          <span className={`tx-type-dot ${t.type}`} aria-hidden="true" />
           <div className="tx-main">
             <span className="tx-cat">{t.category}</span>
             {t.description && <span className="tx-desc">{t.description}</span>}

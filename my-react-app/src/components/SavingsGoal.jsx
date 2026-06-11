@@ -9,8 +9,21 @@ export default function SavingsGoal({ summary }) {
   if (monthlyIncome <= 0) {
     return (
       <section className="card savings-goal">
-        <h2>Savings goal</h2>
-        <p className="muted">Add some income to see your recommended savings target.</p>
+        <div className="card-title-row">
+          <span className="card-icon" aria-hidden="true">
+            🎯
+          </span>
+          <h2>Savings goal</h2>
+        </div>
+        <div className="empty-state">
+          <span className="empty-state-icon" aria-hidden="true">
+            💡
+          </span>
+          <p className="empty-state-title">No income data yet</p>
+          <p className="muted small">
+            Add an income transaction below to unlock your personalised savings target.
+          </p>
+        </div>
       </section>
     )
   }
@@ -24,7 +37,12 @@ export default function SavingsGoal({ summary }) {
   return (
     <section className="card savings-goal">
       <div className="card-head">
-        <h2>Savings goal</h2>
+        <div className="card-title-row">
+          <span className="card-icon" aria-hidden="true">
+            🎯
+          </span>
+          <h2>Savings goal</h2>
+        </div>
         <span className={`status-badge ${meta.className}`}>
           {meta.icon} {meta.label}
         </span>
