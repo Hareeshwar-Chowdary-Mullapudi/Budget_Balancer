@@ -1,4 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_URL + '/api'
+// Empty VITE_API_URL → relative /api (Vite dev proxy or same-origin deploy).
+const API_ROOT = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+const BASE_URL = API_ROOT ? `${API_ROOT}/api` : '/api'
 
 class ApiError extends Error {
   constructor(message, status, data) {
@@ -26,7 +28,7 @@ async function request(method, path, body) {
   } catch {
     // fetch only rejects on network-level failures (server down, CORS, offline)
     throw new ApiError(
-      'Cannot reach the server. Make sure the backend is running on http://localhost:5000.',
+      'Cannot reach the server. Check your connection and that the API is running.',
       0,
       null
     )
