@@ -27,7 +27,13 @@ if (allowedOrigins?.length) {
 app.use(express.json())
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() })
+  const dbState = mongoose.connection.readyState
+  const dbOk = dbState === 1 // 1 = connected
+  res.status(dbOk ? 200 : 503).json({
+    status: dbOk ? 'ok' : 'degraded',
+    db: dbOk ? 'connected' : 'disconnected',
+    time: new Date().toISOString(),
+  })
 })
 
 app.use('/api/auth', authRoutes)
@@ -42,15 +48,13 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/budget_balancer'
 
-async function start() {
-  try {
-    await mongoose.connect(MONGO_URI)
-    console.log('Connected to MongoDB')
-    app.listen(PORT, () => console.log(`API running on port ${PORT}`))
-  } catch (err) {
-    console.error('Failed to connect to MongoDB:', err.message)
-    process.exit(1)
-  }
-}
+// Listen immediately so the host health check works even while DB connects.
+app.listen(PORT, () => console.log(`API running on port ${PORT}`))
 
-start()
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB:', err.message)
+    console.error('API is up but database routes will fail until MONGO_URI is fixed.')
+  })
