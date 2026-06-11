@@ -1,7 +1,7 @@
 {
   "name": "budget-backend",
   "version": "1.0.0",
-  "description": "Budget Balancer API",
+  "description": "BudgetWise API",
   "type": "module",
   "main": "server.js",
   "engines": {

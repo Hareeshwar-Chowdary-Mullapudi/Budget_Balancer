@@ -1,6 +1,6 @@
-# Budget Balancer
+# BudgetWise
 
-A multipage budget balancer web app. Users sign up / log in, add transactions, and
+A multipage budget tracking web app. Users sign up / log in, add transactions, and
 the app automatically splits everything into **income**, **expense**, and the
 remaining **savings** (`savings = income − expense`).
 
@@ -49,7 +49,7 @@ Environment variables (`backend/.env`):
 | Variable         | Description                          | Default                                      |
 | ---------------- | ------------------------------------ | -------------------------------------------- |
 | `PORT`           | API port                             | `5000`                                       |
-| `MONGO_URI`      | MongoDB connection string            | `mongodb://127.0.0.1:27017/budget_balancer`  |
+| `MONGO_URI`      | MongoDB connection string            | `mongodb://127.0.0.1:27017/budget_wise`  |
 | `JWT_SECRET`     | Secret used to sign JWTs             | _required in production_                     |
 | `JWT_EXPIRES_IN` | Token lifetime                       | `7d`                                         |
 | `CLIENT_ORIGIN`  | Allowed CORS origins (comma-separated) | _all origins in dev_                     |
