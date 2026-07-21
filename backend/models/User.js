@@ -11,18 +11,27 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    password: { type: String, required: true, minlength: 6 },
+    password: {
+      type: String,
+      minlength: 6,
+      required: function passwordRequired() {
+        return !this.googleId
+      },
+    },
+    googleId: { type: String, unique: true, sparse: true },
+    avatar: { type: String },
   },
   { timestamps: true }
 )
 
 userSchema.pre('save', async function hashPassword() {
-  if (!this.isModified('password')) return
+  if (!this.password || !this.isModified('password')) return
   const salt = await bcrypt.genSalt(10)
   this.password = await bcrypt.hash(this.password, salt)
 })
 
 userSchema.methods.comparePassword = function comparePassword(candidate) {
+  if (!this.password) return Promise.resolve(false)
   return bcrypt.compare(candidate, this.password)
 }
 

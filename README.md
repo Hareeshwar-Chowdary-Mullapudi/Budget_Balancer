@@ -7,7 +7,7 @@ remaining **savings** (`savings = income − expense`).
 - **Frontend:** React 19 + Vite + React Router (multipage SPA)
 - **Backend:** Node.js + Express 5 REST API
 - **Database:** MongoDB (via Mongoose) — stores users and their transactions
-- **Auth:** Email/password with bcrypt-hashed passwords and JWT tokens
+- **Auth:** Email/password (bcrypt + JWT) and Google Sign-In (ID token → same JWT)
 
 ## Project structure
 
@@ -54,20 +54,36 @@ Environment variables (`backend/.env`):
 | `JWT_EXPIRES_IN` | Token lifetime                       | `7d`                                         |
 | `CLIENT_ORIGIN`  | Allowed CORS origins (comma-separated) | _all origins in dev_                     |
 | `NODE_ENV`       | Set to `production` on your host     | `development`                                |
+| `GOOGLE_CLIENT_ID` | Google OAuth Web client ID         | _required for Google Sign-In_                |
+
+### Google Sign-In setup
+
+1. Open [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials).
+2. Create an **OAuth 2.0 Client ID** of type **Web application**.
+3. Under **Authorized JavaScript origins**, add:
+   - `http://localhost:5173` (local Vite)
+   - your production frontend origin (e.g. `https://your-app.netlify.app`)
+4. Copy the **Client ID** into:
+   - `backend/.env` → `GOOGLE_CLIENT_ID=...`
+   - `my-react-app/.env` → `VITE_GOOGLE_CLIENT_ID=...` (same value)
+5. Restart both servers. Login and Signup pages will show **Continue with Google**.
+
+Google accounts are linked by email: if someone already signed up with password using
+the same address, Google Sign-In attaches `googleId` to that user instead of creating a duplicate.
 
 ### 2. Frontend
 
 ```bash
 cd my-react-app
 npm install
-cp .env.example .env     # optional locally; Vite proxies /api to :5000
+cp .env.example .env     # set VITE_GOOGLE_CLIENT_ID; Vite proxies /api to :5000
 npm run dev              # starts Vite on http://localhost:5173
 ```
 
 The Vite dev server proxies `/api/*` to `http://localhost:5000`, so run the
 backend at the same time.
 
-Then open http://localhost:5173, sign up, and start adding transactions.
+Then open http://localhost:5173, sign up (email/password or Google), and start adding transactions.
 
 ## Production build
 
@@ -94,6 +110,7 @@ Typical split deploy: **static frontend** (Netlify, Vercel, Cloudflare Pages) +
    - `MONGO_URI` — Atlas connection string
    - `JWT_SECRET` — long random string (32+ characters)
    - `CLIENT_ORIGIN` — your frontend URL(s), e.g. `https://my-app.netlify.app`
+   - `GOOGLE_CLIENT_ID` — same Google Web client ID as the frontend
 3. Start command: `npm start` (root: `backend/`).
 4. Health check: `GET /api/health`
 
@@ -101,9 +118,11 @@ Typical split deploy: **static frontend** (Netlify, Vercel, Cloudflare Pages) +
 
 1. Set `VITE_API_URL` to your deployed API origin **without** `/api`, e.g.
    `https://budget-api.onrender.com`
-2. Build command: `npm run build` (root: `my-react-app/`)
-3. Publish directory: `dist`
-4. SPA routing is configured via `public/_redirects` (Netlify) and `vercel.json` (Vercel).
+2. Set `VITE_GOOGLE_CLIENT_ID` to the same Google Web client ID (and add your
+   production origin under Authorized JavaScript origins in Google Cloud).
+3. Build command: `npm run build` (root: `my-react-app/`)
+4. Publish directory: `dist`
+5. SPA routing is configured via `public/_redirects` (Netlify) and `vercel.json` (Vercel).
 
 If frontend and API share the same domain behind a reverse proxy that forwards
 `/api` to the backend, leave `VITE_API_URL` empty.
@@ -116,6 +135,7 @@ All `/transactions` routes require an `Authorization: Bearer <token>` header.
 | ------ | ------------------------ | -------------------------------------------- |
 | POST   | `/api/auth/signup`       | Create account → `{ token, user }`           |
 | POST   | `/api/auth/login`        | Log in → `{ token, user }`                   |
+| POST   | `/api/auth/google`       | Google ID token → `{ token, user }`          |
 | GET    | `/api/auth/me`           | Current user (requires token)                |
 | GET    | `/api/transactions`      | List transactions + `{ income, expense, savings, count }` summary |
 | POST   | `/api/transactions`      | Add a transaction (`type`, `amount`, `category`, `description`, `date`) |

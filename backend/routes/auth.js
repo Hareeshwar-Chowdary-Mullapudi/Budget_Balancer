@@ -1,9 +1,11 @@
 import { Router } from 'express'
 import jwt from 'jsonwebtoken'
+import { OAuth2Client } from 'google-auth-library'
 import User from '../models/User.js'
 import auth from '../middleware/auth.js'
 
 const router = Router()
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 function signToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -56,6 +58,60 @@ router.post('/login', async (req, res, next) => {
     const token = signToken(user.id)
     res.json({ token, user })
   } catch (err) {
+    next(err)
+  }
+})
+
+// POST /api/auth/google — verify Google ID token, find-or-create user, return app JWT
+router.post('/google', async (req, res, next) => {
+  try {
+    const { credential } = req.body
+    if (!credential) {
+      return res.status(400).json({ message: 'Google credential is required' })
+    }
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(503).json({ message: 'Google sign-in is not configured' })
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    })
+    const payload = ticket.getPayload()
+    if (!payload?.email || !payload.sub) {
+      return res.status(401).json({ message: 'Invalid Google token' })
+    }
+    if (payload.email_verified === false) {
+      return res.status(401).json({ message: 'Google email is not verified' })
+    }
+
+    const email = payload.email.toLowerCase()
+    let user = await User.findOne({
+      $or: [{ googleId: payload.sub }, { email }],
+    })
+
+    if (user) {
+      if (!user.googleId) {
+        user.googleId = payload.sub
+        if (payload.picture && !user.avatar) user.avatar = payload.picture
+        if (payload.name && !user.name) user.name = payload.name
+        await user.save()
+      }
+    } else {
+      user = await User.create({
+        name: payload.name || email.split('@')[0],
+        email,
+        googleId: payload.sub,
+        avatar: payload.picture,
+      })
+    }
+
+    const token = signToken(user.id)
+    res.json({ token, user })
+  } catch (err) {
+    if (err?.message?.includes('Token used too late') || err?.message?.includes('Invalid token')) {
+      return res.status(401).json({ message: 'Invalid or expired Google token' })
+    }
     next(err)
   }
 })

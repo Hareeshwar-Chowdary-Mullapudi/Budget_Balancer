@@ -308,6 +308,41 @@ p {
 .auth-card h1 {
   font-size: 24px;
 }
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.auth-google {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.auth-google-btn {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+.auth-google-btn.is-disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+.auth-google-hint {
+  margin: 0;
+  text-align: center;
+}
+.auth-google-hint code {
+  font-size: 12px;
+}
 label {
   display: flex;
   flex-direction: column;

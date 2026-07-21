@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 
 export default function Signup() {
-  const { signup } = useAuth()
+  const { signup, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -20,6 +21,19 @@ export default function Signup() {
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Unable to sign up')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleGoogle(credential) {
+    setError('')
+    setSubmitting(true)
+    try {
+      await loginWithGoogle(credential)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Unable to sign in with Google')
     } finally {
       setSubmitting(false)
     }
@@ -70,6 +84,12 @@ export default function Signup() {
         <button className="btn btn-primary" disabled={submitting}>
           {submitting ? 'Creating account…' : 'Sign up'}
         </button>
+
+        <GoogleSignInButton
+          onCredential={handleGoogle}
+          onError={setError}
+          disabled={submitting}
+        />
 
         <p className="muted small">
           Already have an account? <Link to="/login">Log in</Link>
