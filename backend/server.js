@@ -1,10 +1,21 @@
 import 'dotenv/config'
+import dns from 'dns'
 import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
 
 import authRoutes from './routes/auth.js'
 import transactionRoutes from './routes/transactions.js'
+
+// Node on Windows often inherits Docker Desktop DNS (172.x), which refuses
+// mongodb+srv SRV lookups (querySrv ECONNREFUSED). Prefer public resolvers.
+if (process.env.MONGO_DNS_SERVERS) {
+  dns.setServers(
+    process.env.MONGO_DNS_SERVERS.split(',').map((s) => s.trim()).filter(Boolean)
+  )
+} else if (process.platform === 'win32') {
+  dns.setServers(['8.8.8.8', '1.1.1.1'])
+}
 
 const isProduction = process.env.NODE_ENV === 'production'
 
@@ -14,7 +25,9 @@ if (isProduction && !process.env.JWT_SECRET) {
 }
 
 const allowedOrigins = process.env.CLIENT_ORIGIN
-  ? process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean)
+  ? process.env.CLIENT_ORIGIN.split(',')
+      .map((o) => o.trim().replace(/\/$/, ''))
+      .filter(Boolean)
   : null
 
 const app = express()
@@ -25,6 +38,7 @@ if (allowedOrigins?.length) {
   app.use(cors())
 }
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 app.get('/api/health', (req, res) => {
   const dbState = mongoose.connection.readyState

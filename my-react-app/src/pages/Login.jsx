@@ -1,15 +1,21 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 
 export default function Login() {
-  const { login, loginWithGoogle } = useAuth()
+  const { login } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    const oauthError = searchParams.get('error')
+    if (oauthError) setError(oauthError)
+  }, [searchParams])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -20,19 +26,6 @@ export default function Login() {
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Unable to log in')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  async function handleGoogle(credential) {
-    setError('')
-    setSubmitting(true)
-    try {
-      await loginWithGoogle(credential)
-      navigate('/dashboard')
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Unable to sign in with Google')
     } finally {
       setSubmitting(false)
     }
@@ -72,11 +65,7 @@ export default function Login() {
           {submitting ? 'Logging in…' : 'Log in'}
         </button>
 
-        <GoogleSignInButton
-          onCredential={handleGoogle}
-          onError={setError}
-          disabled={submitting}
-        />
+        <GoogleSignInButton onError={setError} disabled={submitting} />
 
         <p className="muted small">
           Don't have an account? <Link to="/signup">Sign up</Link>

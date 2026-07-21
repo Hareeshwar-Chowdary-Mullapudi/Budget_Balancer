@@ -13,6 +13,58 @@ function signToken(userId) {
   })
 }
 
+function clientOrigin() {
+  const raw = process.env.CLIENT_ORIGIN || 'http://localhost:5173'
+  return raw.split(',')[0].trim().replace(/\/$/, '')
+}
+
+async function upsertGoogleUser(credential) {
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    const err = new Error('Google sign-in is not configured')
+    err.status = 503
+    throw err
+  }
+
+  const ticket = await googleClient.verifyIdToken({
+    idToken: credential,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  })
+  const payload = ticket.getPayload()
+  if (!payload?.email || !payload.sub) {
+    const err = new Error('Invalid Google token')
+    err.status = 401
+    throw err
+  }
+  if (payload.email_verified === false) {
+    const err = new Error('Google email is not verified')
+    err.status = 401
+    throw err
+  }
+
+  const email = payload.email.toLowerCase()
+  let user = await User.findOne({
+    $or: [{ googleId: payload.sub }, { email }],
+  })
+
+  if (user) {
+    if (!user.googleId) {
+      user.googleId = payload.sub
+      if (payload.picture && !user.avatar) user.avatar = payload.picture
+      if (payload.name && !user.name) user.name = payload.name
+      await user.save()
+    }
+  } else {
+    user = await User.create({
+      name: payload.name || email.split('@')[0],
+      email,
+      googleId: payload.sub,
+      avatar: payload.picture,
+    })
+  }
+
+  return { user, token: signToken(user.id) }
+}
+
 // POST /api/auth/signup
 router.post('/signup', async (req, res, next) => {
   try {
@@ -62,57 +114,43 @@ router.post('/login', async (req, res, next) => {
   }
 })
 
-// POST /api/auth/google — verify Google ID token, find-or-create user, return app JWT
+// POST /api/auth/google — JSON body (popup / SPA flow)
 router.post('/google', async (req, res, next) => {
   try {
     const { credential } = req.body
     if (!credential) {
       return res.status(400).json({ message: 'Google credential is required' })
     }
-    if (!process.env.GOOGLE_CLIENT_ID) {
-      return res.status(503).json({ message: 'Google sign-in is not configured' })
-    }
 
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    })
-    const payload = ticket.getPayload()
-    if (!payload?.email || !payload.sub) {
-      return res.status(401).json({ message: 'Invalid Google token' })
-    }
-    if (payload.email_verified === false) {
-      return res.status(401).json({ message: 'Google email is not verified' })
-    }
-
-    const email = payload.email.toLowerCase()
-    let user = await User.findOne({
-      $or: [{ googleId: payload.sub }, { email }],
-    })
-
-    if (user) {
-      if (!user.googleId) {
-        user.googleId = payload.sub
-        if (payload.picture && !user.avatar) user.avatar = payload.picture
-        if (payload.name && !user.name) user.name = payload.name
-        await user.save()
-      }
-    } else {
-      user = await User.create({
-        name: payload.name || email.split('@')[0],
-        email,
-        googleId: payload.sub,
-        avatar: payload.picture,
-      })
-    }
-
-    const token = signToken(user.id)
+    const { token, user } = await upsertGoogleUser(credential)
     res.json({ token, user })
   } catch (err) {
     if (err?.message?.includes('Token used too late') || err?.message?.includes('Invalid token')) {
       return res.status(401).json({ message: 'Invalid or expired Google token' })
     }
+    if (err.status) {
+      return res.status(err.status).json({ message: err.message })
+    }
     next(err)
+  }
+})
+
+// POST /api/auth/google/callback — Google redirect (form POST), then send user back to the SPA
+router.post('/google/callback', async (req, res) => {
+  const origin = clientOrigin()
+  try {
+    const credential = req.body?.credential
+    if (!credential) {
+      return res.redirect(`${origin}/login?error=${encodeURIComponent('Google sign-in failed')}`)
+    }
+
+    const { token } = await upsertGoogleUser(credential)
+    // Hash fragment keeps the JWT out of server Referer logs
+    return res.redirect(`${origin}/oauth/callback#token=${encodeURIComponent(token)}`)
+  } catch (err) {
+    console.error('Google callback error:', err.message)
+    const message = err.message || 'Google sign-in failed'
+    return res.redirect(`${origin}/login?error=${encodeURIComponent(message)}`)
   }
 })
 

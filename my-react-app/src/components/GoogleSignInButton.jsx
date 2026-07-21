@@ -22,35 +22,36 @@ function loadGisScript() {
   })
 }
 
-export default function GoogleSignInButton({ onCredential, onError, disabled }) {
+function googleLoginUri() {
+  const apiRoot = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+  if (apiRoot) return `${apiRoot}/api/auth/google/callback`
+  // Local Vite proxy: Google must hit the API host directly (not the Vite origin).
+  return 'http://localhost:5000/api/auth/google/callback'
+}
+
+export default function GoogleSignInButton({ onError, disabled }) {
   const buttonRef = useRef(null)
-  const onCredentialRef = useRef(onCredential)
   const onErrorRef = useRef(onError)
   const [ready, setReady] = useState(false)
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
-  onCredentialRef.current = onCredential
   onErrorRef.current = onError
 
   useEffect(() => {
     if (!clientId || disabled) return undefined
 
     let cancelled = false
+    const loginUri = googleLoginUri()
 
     loadGisScript()
       .then(() => {
         if (cancelled || !buttonRef.current) return
 
+        // Redirect mode avoids popup blockers (common on mobile / strict browsers).
         window.google.accounts.id.initialize({
           client_id: clientId,
-          callback: (response) => {
-            if (response?.credential) {
-              onCredentialRef.current?.(response.credential)
-            } else {
-              onErrorRef.current?.('Google sign-in was cancelled or failed')
-            }
-          },
-          ux_mode: 'popup',
+          ux_mode: 'redirect',
+          login_uri: loginUri,
           auto_select: false,
         })
 

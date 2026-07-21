@@ -71,6 +71,13 @@ Environment variables (`backend/.env`):
 Google accounts are linked by email: if someone already signed up with password using
 the same address, Google Sign-In attaches `googleId` to that user instead of creating a duplicate.
 
+**Important (redirect mode):** under the same OAuth client, add these
+**Authorized redirect URIs**:
+- `http://localhost:5000/api/auth/google/callback`
+- `https://YOUR-API.onrender.com/api/auth/google/callback`
+
+Google Sign-In uses full-page redirect (not a popup) so mobile browsers don’t block it.
+
 ### 2. Frontend
 
 ```bash

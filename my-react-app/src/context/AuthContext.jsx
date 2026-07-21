@@ -39,13 +39,21 @@ export function AuthProvider({ children }) {
     setUser(res.data.user)
   }
 
+  async function completeOAuthLogin(token) {
+    localStorage.setItem('token', token)
+    const res = await api.get('/auth/me')
+    setUser(res.data.user)
+  }
+
   function logout() {
     localStorage.removeItem('token')
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, loginWithGoogle, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, signup, loginWithGoogle, completeOAuthLogin, logout }}
+    >
       {children}
     </AuthContext.Provider>
   )
