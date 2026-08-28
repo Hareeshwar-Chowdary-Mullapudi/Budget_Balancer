@@ -88,6 +88,27 @@ p {
 .brand:hover {
   text-decoration: none;
 }
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-mark {
+  display: block;
+  flex-shrink: 0;
+}
+.logo-text {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-h);
+  letter-spacing: -0.02em;
+}
+.hero-logo {
+  margin-bottom: 20px;
+}
+.hero-logo .logo-text {
+  font-size: 22px;
+}
 .nav-links {
   display: flex;
   align-items: center;

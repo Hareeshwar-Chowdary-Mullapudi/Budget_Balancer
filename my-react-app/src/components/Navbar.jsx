@@ -1,5 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Logo from './Logo'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -13,7 +14,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <Link to="/" className="brand">
-        💰 BudgetWise
+        <Logo />
       </Link>
 
       <div className="nav-links">

@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Logo from '../components/Logo'
 
 export default function Home() {
   const { user } = useAuth()
 
   return (
     <div className="hero">
+      <Logo size={48} className="hero-logo" />
       <h1>Balance your budget with clarity</h1>
       <p className="hero-sub">
         Track every transaction in one place. We automatically split your money into
