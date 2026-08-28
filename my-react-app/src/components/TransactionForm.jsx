@@ -30,7 +30,7 @@ export default function TransactionForm({ onAdded }) {
       setDate(today())
       onAdded?.()
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not add transaction')
+      setError(err.response?.data?.message || err.message || 'Could not add transaction')
     } finally {
       setSubmitting(false)
     }

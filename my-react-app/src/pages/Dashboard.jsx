@@ -2,8 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import useTransactions from '../hooks/useTransactions'
 import SummaryCards from '../components/SummaryCards'
-import SavingsGoal from '../components/SavingsGoal'
-import SavingsTable from '../components/SavingsTable'
+import AiBudgetChat from '../components/AiBudgetChat'
 import TransactionForm from '../components/TransactionForm'
 import TransactionList from '../components/TransactionList'
 
@@ -22,16 +21,13 @@ export default function Dashboard() {
           <span className="page-head-accent">, here's your balance</span>
         </h1>
         <p className="muted page-sub">
-          Track income and expenses — savings are calculated automatically.
+          This month&apos;s income, expenses, and savings — updated as you log transactions.
         </p>
       </header>
 
       <SummaryCards summary={summary} />
 
-      <div className="goal-grid">
-        <SavingsGoal summary={summary} />
-        <SavingsTable income={summary?.monthlyIncome} />
-      </div>
+      <AiBudgetChat />
 
       <div className="dashboard-grid">
         <TransactionForm onAdded={refresh} />
@@ -39,8 +35,8 @@ export default function Dashboard() {
         <section className="card">
           <div className="card-head">
             <h2>Recent transactions</h2>
-            <Link to="/transactions" className="link">
-              View all →
+            <Link to="/transaction-history" className="link">
+              View history →
             </Link>
           </div>
           {loading ? (

@@ -1,21 +1,14 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import GoogleSignInButton from '../components/GoogleSignInButton'
 
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-
-  useEffect(() => {
-    const oauthError = searchParams.get('error')
-    if (oauthError) setError(oauthError)
-  }, [searchParams])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -40,7 +33,7 @@ export default function Login() {
         {error && <div className="alert alert-error">{error}</div>}
 
         <label>
-          Email
+          Email <span className="required">*</span>
           <input
             type="email"
             value={email}
@@ -51,7 +44,7 @@ export default function Login() {
         </label>
 
         <label>
-          Password
+          Password <span className="required">*</span>
           <input
             type="password"
             value={password}
@@ -64,8 +57,6 @@ export default function Login() {
         <button className="btn btn-primary" disabled={submitting}>
           {submitting ? 'Logging in…' : 'Log in'}
         </button>
-
-        <GoogleSignInButton onError={setError} disabled={submitting} />
 
         <p className="muted small">
           Don't have an account? <Link to="/signup">Sign up</Link>

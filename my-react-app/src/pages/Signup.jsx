@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import GoogleSignInButton from '../components/GoogleSignInButton'
 
 export default function Signup() {
   const { signup } = useAuth()
@@ -35,7 +34,7 @@ export default function Signup() {
         {error && <div className="alert alert-error">{error}</div>}
 
         <label>
-          Name
+          Name <span className="required">*</span>
           <input
             type="text"
             value={name}
@@ -46,7 +45,7 @@ export default function Signup() {
         </label>
 
         <label>
-          Email
+          Email <span className="required">*</span>
           <input
             type="email"
             value={email}
@@ -57,7 +56,7 @@ export default function Signup() {
         </label>
 
         <label>
-          Password
+          Password <span className="required">*</span>
           <input
             type="password"
             value={password}
@@ -71,8 +70,6 @@ export default function Signup() {
         <button className="btn btn-primary" disabled={submitting}>
           {submitting ? 'Creating account…' : 'Sign up'}
         </button>
-
-        <GoogleSignInButton onError={setError} disabled={submitting} />
 
         <p className="muted small">
           Already have an account? <Link to="/login">Log in</Link>

@@ -28,7 +28,7 @@ async function request(method, path, body) {
   } catch {
     // fetch only rejects on network-level failures (server down, CORS, offline)
     throw new ApiError(
-      'Cannot reach the server. Check your connection and that the API is running.',
+      'Cannot reach the server. Start the backend: cd backend && npm run dev',
       0,
       null
     )

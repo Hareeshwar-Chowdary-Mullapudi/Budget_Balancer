@@ -13,31 +13,31 @@ export default function TransactionList({ transactions, onDelete }) {
     )
   }
 
+  const gridClass = onDelete ? 'tx-row tx-row-delete' : 'tx-row'
+
   return (
     <ul className="tx-list">
       {transactions.map((t) => (
-        <li key={t._id} className={`tx-item ${t.type}`}>
+        <li key={t._id} className={`tx-item ${gridClass} ${t.type}`}>
           <span className={`tx-type-dot ${t.type}`} aria-hidden="true" />
-          <div className="tx-main">
+          <div className="tx-details">
             <span className="tx-cat">{t.category}</span>
-            {t.description && <span className="tx-desc">{t.description}</span>}
-            <span className="tx-date">{formatDate(t.date)}</span>
+            {t.description ? <span className="tx-desc">{t.description}</span> : null}
           </div>
-          <div className="tx-side">
-            <span className={`tx-amount ${t.type}`}>
-              {t.type === 'income' ? '+' : '−'}
-              {formatMoney(t.amount).replace('-', '')}
-            </span>
-            {onDelete && (
-              <button
-                className="btn-delete"
-                title="Delete"
-                onClick={() => onDelete(t._id)}
-              >
-                ✕
-              </button>
-            )}
-          </div>
+          <span className="tx-date">{formatDate(t.date)}</span>
+          <span className={`tx-amount ${t.type}`}>
+            {t.type === 'income' ? '+' : '−'}
+            {formatMoney(t.amount).replace('-', '')}
+          </span>
+          {onDelete && (
+            <button
+              className="btn-delete"
+              title="Delete"
+              onClick={() => onDelete(t._id)}
+            >
+              ✕
+            </button>
+          )}
         </li>
       ))}
     </ul>

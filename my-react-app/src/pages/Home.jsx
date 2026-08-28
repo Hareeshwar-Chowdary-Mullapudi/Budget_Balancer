@@ -9,7 +9,7 @@ export default function Home() {
       <h1>Balance your budget with clarity</h1>
       <p className="hero-sub">
         Track every transaction in one place. We automatically split your money into
-        <strong> income</strong>, <strong>expenses</strong> and your remaining
+        <strong> income</strong>, <strong> expenses</strong> and your remaining
         <strong> savings</strong>.
       </p>
       <div className="hero-actions">

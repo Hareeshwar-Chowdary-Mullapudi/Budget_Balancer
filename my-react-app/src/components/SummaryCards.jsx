@@ -1,17 +1,19 @@
 import { formatMoney } from '../utils/format'
 
 const CARDS = [
-  { key: 'income', label: 'Total income', icon: '↗', field: 'income' },
-  { key: 'expense', label: 'Total expense', icon: '↘', field: 'expense' },
-  { key: 'savings', label: 'Remaining savings', icon: '◎', field: 'savings' },
+  { key: 'income', label: 'Monthly income', icon: '↗', field: 'income' },
+  { key: 'expense', label: 'Monthly expenses', icon: '↘', field: 'expense' },
+  { key: 'savings', label: 'Monthly savings', icon: '◎', field: 'savings' },
 ]
 
 export default function SummaryCards({ summary }) {
-  const { income = 0, expense = 0, savings = 0 } = summary || {}
+  const { income = 0, expense = 0, savings = 0, monthLabel } = summary || {}
   const values = { income, expense, savings }
 
   return (
-    <div className="summary-grid">
+    <div className="summary-section">
+      {monthLabel && <p className="summary-period muted small">{monthLabel}</p>}
+      <div className="summary-grid">
       {CARDS.map(({ key, label, icon, field }) => (
         <div
           key={key}
@@ -26,6 +28,7 @@ export default function SummaryCards({ summary }) {
           <span className="summary-value">{formatMoney(values[field])}</span>
         </div>
       ))}
+      </div>
     </div>
   )
 }

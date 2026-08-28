@@ -1,5 +1,9 @@
 client_secret_*.json
 .env
+.env.*
+!.env.example
 *.log
 node_modules/
-
+dist/
+build/
+.DS_Store

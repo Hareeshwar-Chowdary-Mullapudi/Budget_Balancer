@@ -1,152 +1,94 @@
 # BudgetWise
 
-A multipage budget tracking web app. Users sign up / log in, add transactions, and
-the app automatically splits everything into **income**, **expense**, and the
-remaining **savings** (`savings = income − expense`).
+A full-stack budget tracker. Sign up, log income and expenses, see **monthly** totals, and chat with an AI coach about your spending.
 
-- **Frontend:** React 19 + Vite + React Router (multipage SPA)
+- **Frontend:** React 19 + Vite + React Router
 - **Backend:** Node.js + Express 5 REST API
-- **Database:** MongoDB (via Mongoose) — stores users and their transactions
-- **Auth:** Email/password (bcrypt + JWT) and Google Sign-In (ID token → same JWT)
+- **Database:** MongoDB (Mongoose)
+- **Auth:** Email/password (bcrypt + JWT)
+- **AI:** Groq or Gemini (optional)
+
+## Features
+
+- Monthly income, expenses, and savings on the dashboard
+- Add / delete transactions with category, description, and date
+- Transaction history (last 10) + full list with filters (this month, all time, income/expense)
+- AI budget chat using your real monthly numbers
 
 ## Project structure
 
 ```
-budget/
-├─ backend/                # Express + MongoDB API
-│  ├─ models/              # User, Transaction (Mongoose schemas)
-│  ├─ routes/              # auth.js, transactions.js
-│  ├─ middleware/auth.js   # JWT verification
-│  ├─ server.js            # App entry point
-│  └─ .env                 # Config (PORT, MONGO_URI, JWT_SECRET)
-└─ my-react-app/           # React + Vite frontend
-   └─ src/
-      ├─ pages/            # Home, Login, Signup, Dashboard, Transactions
-      ├─ components/       # Navbar, SummaryCards, TransactionForm, TransactionList, ProtectedRoute
-      ├─ context/          # AuthContext (login/signup/logout state)
-      ├─ hooks/            # useTransactions (fetch + summary)
-      └─ api.js            # fetch-based API client (adds JWT header)
+budgetWise/
+├── backend/           # Express API
+│   ├── models/        # User, Transaction
+│   ├── routes/        # auth, transactions, advice
+│   ├── services/      # AI chat (Groq / Gemini)
+│   └── utils/         # summary, validation
+└── my-react-app/      # React SPA
+    └── src/
+        ├── pages/     # Home, Login, Signup, Dashboard, TransactionHistory, AllTransactions
+        ├── components/
+        └── hooks/
 ```
 
 ## Prerequisites
 
 - Node.js 18+
-- A running MongoDB instance (local `mongodb://127.0.0.1:27017` or MongoDB Atlas)
+- MongoDB (local or Atlas)
 
 ## Setup & run
 
-### 1. Backend
+### Backend
 
 ```bash
 cd backend
 npm install
-cp .env.example .env   # then edit JWT_SECRET (and MONGO_URI if not local)
-npm run dev            # starts API on http://localhost:5000 (auto-reload)
+cp .env.example .env    # edit JWT_SECRET and MONGO_URI
+npm run dev             # http://localhost:5000
 ```
 
-Environment variables (`backend/.env`):
+| Variable | Description |
+| -------- | ----------- |
+| `MONGO_URI` | MongoDB connection string |
+| `JWT_SECRET` | Secret for signing JWTs (required in production) |
+| `CLIENT_ORIGIN` | Frontend URL for CORS, e.g. `http://localhost:5173` |
+| `GROQ_API_KEY` | Groq API key for AI chat (optional) |
+| `AI_PROVIDER` | `groq` (default) or `gemini` |
 
-| Variable         | Description                          | Default                                      |
-| ---------------- | ------------------------------------ | -------------------------------------------- |
-| `PORT`           | API port                             | `5000`                                       |
-| `MONGO_URI`      | MongoDB connection string            | `mongodb://127.0.0.1:27017/budget_wise`  |
-| `JWT_SECRET`     | Secret used to sign JWTs             | _required in production_                     |
-| `JWT_EXPIRES_IN` | Token lifetime                       | `7d`                                         |
-| `CLIENT_ORIGIN`  | Allowed CORS origins (comma-separated) | _all origins in dev_                     |
-| `NODE_ENV`       | Set to `production` on your host     | `development`                                |
-| `GOOGLE_CLIENT_ID` | Google OAuth Web client ID         | _required for Google Sign-In_                |
-
-### Google Sign-In setup
-
-1. Open [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials).
-2. Create an **OAuth 2.0 Client ID** of type **Web application**.
-3. Under **Authorized JavaScript origins**, add:
-   - `http://localhost:5173` (local Vite)
-   - your production frontend origin (e.g. `https://your-app.netlify.app`)
-4. Copy the **Client ID** into:
-   - `backend/.env` → `GOOGLE_CLIENT_ID=...`
-   - `my-react-app/.env` → `VITE_GOOGLE_CLIENT_ID=...` (same value)
-5. Restart both servers. Login and Signup pages will show **Continue with Google**.
-
-Google accounts are linked by email: if someone already signed up with password using
-the same address, Google Sign-In attaches `googleId` to that user instead of creating a duplicate.
-
-**Important (redirect mode):** under the same OAuth client, add these
-**Authorized redirect URIs**:
-- `http://localhost:5000/api/auth/google/callback`
-- `https://YOUR-API.onrender.com/api/auth/google/callback`
-
-Google Sign-In uses full-page redirect (not a popup) so mobile browsers don’t block it.
-
-### 2. Frontend
+### Frontend
 
 ```bash
 cd my-react-app
 npm install
-cp .env.example .env     # set VITE_GOOGLE_CLIENT_ID; Vite proxies /api to :5000
-npm run dev              # starts Vite on http://localhost:5173
+cp .env.example .env
+npm run dev             # http://localhost:5173
 ```
 
-The Vite dev server proxies `/api/*` to `http://localhost:5000`, so run the
-backend at the same time.
+Vite proxies `/api` to `http://localhost:5000` when `VITE_API_URL` is empty.
 
-Then open http://localhost:5173, sign up (email/password or Google), and start adding transactions.
+## Production
 
-## Production build
+**Backend:** Set `NODE_ENV=production`, `MONGO_URI`, `JWT_SECRET`, `CLIENT_ORIGIN`, and `GROQ_API_KEY`. Start with `npm start`.
 
-```bash
-cd my-react-app
-npm run build            # output in my-react-app/dist
-```
+**Frontend:** Set `VITE_API_URL` to your deployed API origin (no `/api` suffix). Build with `npm run build` and deploy `dist/`.
 
-```bash
-cd backend
-npm start                # NODE_ENV=production, MONGO_URI, JWT_SECRET required
-```
+## API
 
-## Deployment
+Protected routes need `Authorization: Bearer <token>`.
 
-Typical split deploy: **static frontend** (Netlify, Vercel, Cloudflare Pages) +
-**Node API** (Render, Railway, Fly.io) + **MongoDB Atlas**.
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| POST | `/api/auth/signup` | Create account |
+| POST | `/api/auth/login` | Log in |
+| GET | `/api/auth/me` | Current user |
+| GET | `/api/transactions` | List + monthly summary |
+| POST | `/api/transactions` | Add transaction |
+| DELETE | `/api/transactions/:id` | Delete transaction |
+| POST | `/api/advice/chat` | AI budget chat |
+| GET | `/api/health` | Health check |
 
-### Backend (API)
+## Security
 
-1. Create a MongoDB Atlas cluster and copy the connection string into `MONGO_URI`.
-2. Set environment variables on your host:
-   - `NODE_ENV=production`
-   - `MONGO_URI` — Atlas connection string
-   - `JWT_SECRET` — long random string (32+ characters)
-   - `CLIENT_ORIGIN` — your frontend URL(s), e.g. `https://my-app.netlify.app`
-   - `GOOGLE_CLIENT_ID` — same Google Web client ID as the frontend
-3. Start command: `npm start` (root: `backend/`).
-4. Health check: `GET /api/health`
-
-### Frontend (static)
-
-1. Set `VITE_API_URL` to your deployed API origin **without** `/api`, e.g.
-   `https://budget-api.onrender.com`
-2. Set `VITE_GOOGLE_CLIENT_ID` to the same Google Web client ID (and add your
-   production origin under Authorized JavaScript origins in Google Cloud).
-3. Build command: `npm run build` (root: `my-react-app/`)
-4. Publish directory: `dist`
-5. SPA routing is configured via `public/_redirects` (Netlify) and `vercel.json` (Vercel).
-
-If frontend and API share the same domain behind a reverse proxy that forwards
-`/api` to the backend, leave `VITE_API_URL` empty.
-
-## API reference
-
-All `/transactions` routes require an `Authorization: Bearer <token>` header.
-
-| Method | Endpoint                 | Description                                  |
-| ------ | ------------------------ | -------------------------------------------- |
-| POST   | `/api/auth/signup`       | Create account → `{ token, user }`           |
-| POST   | `/api/auth/login`        | Log in → `{ token, user }`                   |
-| POST   | `/api/auth/google`       | Google ID token → `{ token, user }`          |
-| GET    | `/api/auth/me`           | Current user (requires token)                |
-| GET    | `/api/transactions`      | List transactions + `{ income, expense, savings, count }` summary |
-| POST   | `/api/transactions`      | Add a transaction (`type`, `amount`, `category`, `description`, `date`) |
-| DELETE | `/api/transactions/:id`  | Delete a transaction                         |
-
-`type` must be `"income"` or `"expense"`. The savings figure is derived as
-`income − expense` and recomputed on every fetch.
+- **Never commit `.env` files** — they are gitignored
+- Use `.env.example` as a template only
+- Rotate API keys if they were ever shared or committed

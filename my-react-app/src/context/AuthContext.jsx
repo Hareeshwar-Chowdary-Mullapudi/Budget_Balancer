@@ -5,19 +5,15 @@ const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  // Only "loading" if we have a token to validate against the server.
   const [loading, setLoading] = useState(() => Boolean(localStorage.getItem('token')))
 
-  // On load, if a token exists, fetch the current user
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) return
     api
       .get('/auth/me')
       .then((res) => setUser(res.data.user))
-      .catch(() => {
-        localStorage.removeItem('token')
-      })
+      .catch(() => localStorage.removeItem('token'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -33,27 +29,13 @@ export function AuthProvider({ children }) {
     setUser(res.data.user)
   }
 
-  async function loginWithGoogle(credential) {
-    const res = await api.post('/auth/google', { credential })
-    localStorage.setItem('token', res.data.token)
-    setUser(res.data.user)
-  }
-
-  async function completeOAuthLogin(token) {
-    localStorage.setItem('token', token)
-    const res = await api.get('/auth/me')
-    setUser(res.data.user)
-  }
-
   function logout() {
     localStorage.removeItem('token')
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, login, signup, loginWithGoogle, completeOAuthLogin, logout }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   )

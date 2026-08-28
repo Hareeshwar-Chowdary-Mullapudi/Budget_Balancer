@@ -2,42 +2,12 @@ import { Router } from 'express'
 import Transaction from '../models/Transaction.js'
 import auth from '../middleware/auth.js'
 
+import { buildSummary } from '../utils/summary.js'
+
 const router = Router()
 
-// All transaction routes require authentication
 router.use(auth)
 
-function buildSummary(transactions) {
-  const income = transactions
-    .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0)
-  const expense = transactions
-    .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0)
-  const savings = income - expense
-
-  // Count distinct calendar months (across years) that have any activity,
-  // so "per month" figures are averaged over the months actually used.
-  const monthKeys = new Set()
-  transactions.forEach((t) => {
-    const d = new Date(t.date)
-    monthKeys.add(`${d.getUTCFullYear()}-${d.getUTCMonth()}`)
-  })
-  const months = monthKeys.size || 1
-
-  return {
-    income,
-    expense,
-    savings,
-    count: transactions.length,
-    months,
-    monthlyIncome: income / months,
-    monthlyExpense: expense / months,
-    monthlySavings: savings / months,
-  }
-}
-
-// GET /api/transactions  -> list + summary split
 router.get('/', async (req, res, next) => {
   try {
     const transactions = await Transaction.find({ user: req.userId }).sort({
@@ -50,7 +20,6 @@ router.get('/', async (req, res, next) => {
   }
 })
 
-// POST /api/transactions  -> add a transaction
 router.post('/', async (req, res, next) => {
   try {
     const { type, amount, category, description, date } = req.body
@@ -78,7 +47,6 @@ router.post('/', async (req, res, next) => {
   }
 })
 
-// DELETE /api/transactions/:id
 router.delete('/:id', async (req, res, next) => {
   try {
     const deleted = await Transaction.findOneAndDelete({
