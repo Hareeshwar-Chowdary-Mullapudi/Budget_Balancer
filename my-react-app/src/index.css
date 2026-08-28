@@ -96,6 +96,12 @@ p {
 .logo-mark {
   display: block;
   flex-shrink: 0;
+  object-fit: contain;
+  image-rendering: auto;
+}
+.brand .logo-mark {
+  width: 36px;
+  height: 36px;
 }
 .logo-text {
   font-size: 19px;
