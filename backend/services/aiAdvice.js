@@ -55,34 +55,7 @@ async function callGroq(messages) {
   return data.choices?.[0]?.message?.content?.trim() || 'No response from Groq'
 }
 
-async function callGemini(messages) {
-  const key = process.env.GEMINI_API_KEY
-  if (!key) throw new Error('GEMINI_API_KEY is not set')
-
-  const system = messages.find((m) => m.role === 'system')?.content || ''
-  const chat = messages.filter((m) => m.role !== 'system')
-  const prompt = `${system}\n\n${chat.map((m) => `${m.role}: ${m.content}`).join('\n')}\nassistant:`
-
-  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS, temperature: 0.7 },
-    }),
-  })
-
-  const data = await res.json()
-  if (!res.ok) throw new Error(data?.error?.message || 'Gemini request failed')
-  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'No response from Gemini'
-}
-
 export async function chatWithAi(summary, userMessage, history = []) {
-  const provider = (process.env.AI_PROVIDER || 'groq').toLowerCase()
-
   const messages = [
     { role: 'system', content: budgetContext(summary) },
     ...history
@@ -92,14 +65,6 @@ export async function chatWithAi(summary, userMessage, history = []) {
     { role: 'user', content: userMessage },
   ]
 
-  let reply
-  if (provider === 'gemini') {
-    reply = await callGemini(messages)
-  } else if (provider === 'huggingface' || provider === 'hf') {
-    throw new Error('Chat mode supports groq or gemini only. Set AI_PROVIDER=groq')
-  } else {
-    reply = await callGroq(messages)
-  }
-
-  return { provider, reply }
+  const reply = await callGroq(messages)
+  return { provider: 'groq', reply }
 }

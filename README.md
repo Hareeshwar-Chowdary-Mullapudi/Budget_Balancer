@@ -6,7 +6,7 @@ A full-stack budget tracker. Sign up, log income and expenses, see **monthly** t
 - **Backend:** Node.js + Express 5 REST API
 - **Database:** MongoDB (Mongoose)
 - **Auth:** Email/password (bcrypt + JWT)
-- **AI:** Groq or Gemini (optional)
+- **AI:** Groq (optional)
 
 ## Features
 
@@ -22,7 +22,7 @@ budgetWise/
 ├── backend/           # Express API
 │   ├── models/        # User, Transaction
 │   ├── routes/        # auth, transactions, advice
-│   ├── services/      # AI chat (Groq / Gemini)
+│   ├── services/      # AI chat (Groq)
 │   └── utils/         # summary, validation
 └── my-react-app/      # React SPA
     └── src/
@@ -53,7 +53,7 @@ npm run dev             # http://localhost:5000
 | `JWT_SECRET` | Secret for signing JWTs (required in production) |
 | `CLIENT_ORIGIN` | Frontend URL for CORS, e.g. `http://localhost:5173` |
 | `GROQ_API_KEY` | Groq API key for AI chat (optional) |
-| `AI_PROVIDER` | `groq` (default) or `gemini` |
+| `GROQ_MODEL` | Groq model ID (default: `openai/gpt-oss-120b`) |
 
 ### Frontend
 
