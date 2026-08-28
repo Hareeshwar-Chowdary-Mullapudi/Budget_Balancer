@@ -42,7 +42,16 @@ export default function Dashboard() {
           {loading ? (
             <p className="muted">Loading…</p>
           ) : (
-            <TransactionList transactions={recent} />
+            <>
+              <TransactionList transactions={recent} />
+              {recent.length > 0 && (
+                <div className="history-more">
+                  <Link to="/transactions" className="btn btn-ghost">
+                    See more →
+                  </Link>
+                </div>
+              )}
+            </>
           )}
         </section>
       </div>

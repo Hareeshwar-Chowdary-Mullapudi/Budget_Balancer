@@ -5,9 +5,9 @@ import TransactionList from '../components/TransactionList'
 const RECENT_LIMIT = 10
 
 export default function TransactionHistory() {
-  const { transactions, summary, loading } = useTransactions()
+  const { transactions, loading } = useTransactions()
   const recent = transactions.slice(0, RECENT_LIMIT)
-  const hasMore = transactions.length > RECENT_LIMIT
+  const hasEntries = recent.length > 0
 
   return (
     <div className="page">
@@ -25,10 +25,10 @@ export default function TransactionHistory() {
         ) : (
           <>
             <TransactionList transactions={recent} />
-            {hasMore && (
+            {hasEntries && (
               <div className="history-more">
                 <Link to="/transactions" className="btn btn-ghost">
-                  View all {summary.count} transactions →
+                  See more →
                 </Link>
               </div>
             )}

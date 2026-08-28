@@ -305,6 +305,11 @@ p {
 .auth-card h1 {
   font-size: 24px;
 }
+.auth-forgot {
+  margin: -6px 0 0;
+  text-align: right;
+  font-size: 14px;
+}
 label {
   display: flex;
   flex-direction: column;

@@ -54,6 +54,10 @@ export default function Login() {
           />
         </label>
 
+        <p className="auth-forgot">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
+
         <button className="btn btn-primary" disabled={submitting}>
           {submitting ? 'Logging in…' : 'Log in'}
         </button>
