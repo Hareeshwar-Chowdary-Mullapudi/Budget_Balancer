@@ -4,7 +4,6 @@ export function isEmailConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
 }
 
-/** Prefer FRONTEND_URL; else first CLIENT_ORIGIN (non-localhost in production). */
 export function getFrontendOrigin() {
   if (process.env.FRONTEND_URL?.trim()) {
     return process.env.FRONTEND_URL.trim().replace(/\/$/, '')
@@ -26,11 +25,12 @@ export function getFrontendOrigin() {
 function createTransport() {
   // Gmail app passwords are often copied with spaces — strip them
   const pass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '')
+  // Prefer 587 + STARTTLS on Windows (465 often hits ESOCKET / CA errors)
   const port = Number(process.env.SMTP_PORT || 587)
   const secure = process.env.SMTP_SECURE === 'true' || port === 465
 
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port,
     secure,
     requireTLS: !secure,
@@ -38,9 +38,12 @@ function createTransport() {
       user: process.env.SMTP_USER,
       pass,
     },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000,
+    tls: {
+      minVersion: 'TLSv1.2',
+    },
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 25000,
   })
 }
 
@@ -49,26 +52,34 @@ export async function sendPasswordResetEmail(to, resetUrl) {
     throw new Error('Email is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS in backend .env')
   }
 
-  // Gmail is happiest when From matches the authenticated user
   const from = process.env.EMAIL_FROM || process.env.SMTP_USER
   const transporter = createTransport()
 
-  await transporter.sendMail({
-    from,
-    to,
-    subject: 'Reset your BudgetWise password',
-    text: [
-      'You requested a password reset for your BudgetWise account.',
-      '',
-      `Open this link to set a new password (valid for 1 hour):`,
-      resetUrl,
-      '',
-      'If you did not request this, you can ignore this email.',
-    ].join('\n'),
-    html: `
+  try {
+    await transporter.sendMail({
+      from,
+      to,
+      subject: 'Reset your BudgetWise password',
+      text: [
+        'You requested a password reset for your BudgetWise account.',
+        '',
+        `Open this link to set a new password (valid for 1 hour):`,
+        resetUrl,
+        '',
+        'If you did not request this, you can ignore this email.',
+      ].join('\n'),
+      html: `
       <p>You requested a password reset for your <strong>BudgetWise</strong> account.</p>
       <p><a href="${resetUrl}">Reset your password</a></p>
       <p style="color:#666;font-size:14px;">This link expires in 1 hour. If you did not request this, ignore this email.</p>
     `,
-  })
+    })
+  } catch (err) {
+    const hint =
+      err.code === 'ESOCKET' || /certificate|socket/i.test(err.message)
+        ? ' On Windows run: cd backend && npm run dev (uses --use-system-ca). Or keep using the on-screen reset link.'
+        : ''
+    err.message = `${err.code || 'SMTP'}: ${err.message}${hint}`
+    throw err
+  }
 }
