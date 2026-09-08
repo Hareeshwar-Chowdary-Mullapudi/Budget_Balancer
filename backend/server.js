@@ -46,11 +46,6 @@ app.listen(PORT, () => {
   } else {
     console.log('Groq AI: GROQ_API_KEY missing in .env')
   }
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    console.log('Email (password reset): configured')
-  } else {
-    console.log('Email (password reset): SMTP not set — dev link fallback')
-  }
 })
 
 mongoose

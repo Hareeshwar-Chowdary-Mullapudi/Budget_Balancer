@@ -1,3 +1,4 @@
+
 :root {
   --text: #94a3b8;
   --text-h: #f8fafc;
@@ -68,7 +69,6 @@ p {
   font-size: 14px;
 }
 
-/* ---------- Navbar ---------- */
 .navbar {
   display: flex;
   align-items: center;
@@ -134,7 +134,7 @@ p {
 .nav-cta {
   color: #fff !important;
 }
-/* ---------- Layout ---------- */
+
 .app-main {
   max-width: 1080px;
   margin: 0 auto;
@@ -171,7 +171,6 @@ p {
   color: var(--text);
 }
 
-/* ---------- Buttons ---------- */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -214,7 +213,6 @@ p {
   font-size: 13px;
 }
 
-/* ---------- Cards ---------- */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -257,7 +255,6 @@ p {
   margin-bottom: 4px;
 }
 
-/* ---------- Empty states ---------- */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -289,7 +286,6 @@ p {
   margin: 0;
 }
 
-/* ---------- Auth ---------- */
 .auth-wrap {
   display: flex;
   justify-content: center;
@@ -304,11 +300,6 @@ p {
 }
 .auth-card h1 {
   font-size: 24px;
-}
-.auth-forgot {
-  margin: -6px 0 0;
-  text-align: right;
-  font-size: 14px;
 }
 label {
   display: flex;
@@ -360,7 +351,6 @@ input:focus {
   color: var(--expense);
 }
 
-/* ---------- Hero ---------- */
 .hero {
   text-align: center;
   padding-top: 20px;
@@ -409,7 +399,6 @@ input:focus {
   line-height: 1.5;
 }
 
-/* ---------- Summary ---------- */
 .summary-section {
   margin-bottom: 28px;
 }
@@ -499,7 +488,6 @@ input:focus {
   color: var(--expense);
 }
 
-/* ---------- Dashboard grid ---------- */
 .dashboard-grid {
   display: grid;
   grid-template-columns: minmax(300px, 380px) 1fr;
@@ -511,7 +499,6 @@ input:focus {
   height: 100%;
 }
 
-/* ---------- Transaction form ---------- */
 .tx-form {
   display: flex;
   flex-direction: column;
@@ -580,7 +567,6 @@ input:focus {
   color: #fff;
 }
 
-/* ---------- Transaction list ---------- */
 .tx-list {
   list-style: none;
   margin: 0;
@@ -672,7 +658,6 @@ input:focus {
   color: var(--expense);
 }
 
-/* ---------- Filters ---------- */
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -729,7 +714,6 @@ input:focus {
   text-align: center;
 }
 
-/* ---------- Budget advice ---------- */
 .advice-card {
   margin-bottom: 28px;
 }
@@ -855,7 +839,6 @@ input:focus {
   min-width: 0;
 }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 820px) {
   .dashboard-grid,
   .summary-grid,

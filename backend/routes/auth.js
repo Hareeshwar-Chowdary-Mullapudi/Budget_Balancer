@@ -1,14 +1,8 @@
 import { Router } from 'express'
 import jwt from 'jsonwebtoken'
-import crypto from 'crypto'
 import User from '../models/User.js'
 import auth from '../middleware/auth.js'
 import { isValidEmail, normalizeEmail } from '../utils/validate.js'
-import {
-  getFrontendOrigin,
-  isEmailConfigured,
-  sendPasswordResetEmail,
-} from '../services/email.js'
 
 const router = Router()
 
@@ -16,10 +10,6 @@ function signToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   })
-}
-
-function hashResetToken(token) {
-  return crypto.createHash('sha256').update(token).digest('hex')
 }
 
 router.post('/signup', async (req, res, next) => {
@@ -73,106 +63,6 @@ router.get('/me', auth, async (req, res, next) => {
     const user = await User.findById(req.userId)
     if (!user) return res.status(404).json({ message: 'User not found' })
     res.json({ user })
-  } catch (err) {
-    next(err)
-  }
-})
-
-router.post('/forgot-password', async (req, res, next) => {
-  try {
-    const { email } = req.body
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required' })
-    }
-    if (!isValidEmail(email)) {
-      return res.status(400).json({ message: 'Please enter a valid email address' })
-    }
-
-    const user = await User.findOne({ email: normalizeEmail(email) }).select(
-      '+resetPasswordToken +resetPasswordExpires'
-    )
-
-    const message =
-      'If an account exists for that email, a password reset link has been sent.'
-
-    if (!user) {
-      return res.json({ message })
-    }
-
-    const resetToken = crypto.randomBytes(32).toString('hex')
-    user.resetPasswordToken = hashResetToken(resetToken)
-    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000)
-    await user.save()
-
-    const resetPath = `/reset-password?token=${resetToken}`
-    const resetUrl = `${getFrontendOrigin()}${resetPath}`
-    const payload = { message }
-
-    if (isEmailConfigured()) {
-      try {
-        await sendPasswordResetEmail(user.email, resetUrl)
-        payload.emailSent = true
-      } catch (err) {
-        console.error('Password reset email failed:', err.message)
-        // Local/dev: don't block the user — show the link on screen
-        if (process.env.NODE_ENV !== 'production') {
-          payload.resetUrl = resetPath
-          payload.emailSent = false
-          payload.message =
-            'Could not send email (' +
-            (err.response || err.code || err.message) +
-            '). Use the reset link below (dev fallback).'
-          return res.json(payload)
-        }
-        return res.status(503).json({
-          message: 'Could not send reset email. Check SMTP settings in backend .env',
-          detail: err.message,
-        })
-      }
-    } else if (process.env.NODE_ENV !== 'production') {
-      // Local fallback when SMTP is not set — show link in the UI
-      payload.resetUrl = resetPath
-      payload.emailSent = false
-      payload.message =
-        'Email is not configured. Use the reset link below (dev only).'
-    } else {
-      console.error('SMTP not configured — cannot send password reset email in production')
-      return res.status(503).json({
-        message: 'Password reset email is not configured on the server',
-      })
-    }
-
-    res.json(payload)
-  } catch (err) {
-    next(err)
-  }
-})
-
-router.post('/reset-password', async (req, res, next) => {
-  try {
-    const { token, password } = req.body
-    if (!token || !password) {
-      return res.status(400).json({ message: 'Token and new password are required' })
-    }
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters' })
-    }
-
-    const user = await User.findOne({
-      resetPasswordToken: hashResetToken(token),
-      resetPasswordExpires: { $gt: Date.now() },
-    }).select('+resetPasswordToken +resetPasswordExpires')
-
-    if (!user) {
-      return res.status(400).json({ message: 'Reset link is invalid or has expired' })
-    }
-
-    user.password = password
-    user.resetPasswordToken = null
-    user.resetPasswordExpires = null
-    await user.save()
-
-    res.json({ message: 'Password updated. You can log in now.' })
   } catch (err) {
     next(err)
   }

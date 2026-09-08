@@ -1,4 +1,3 @@
-// Empty VITE_API_URL → relative /api (Vite dev proxy or same-origin deploy).
 const API_ROOT = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 const BASE_URL = API_ROOT ? `${API_ROOT}/api` : '/api'
 
@@ -6,7 +5,6 @@ class ApiError extends Error {
   constructor(message, status, data) {
     super(message)
     this.status = status
-    // Mirror axios shape so existing components can read err.response.data.message
     this.response = { status, data }
   }
 }
@@ -26,7 +24,6 @@ async function request(method, path, body) {
       body: body !== undefined ? JSON.stringify(body) : undefined,
     })
   } catch {
-    // fetch only rejects on network-level failures (server down, CORS, offline)
     throw new ApiError(
       'Cannot reach the server. Start the backend: cd backend && npm run dev',
       0,
