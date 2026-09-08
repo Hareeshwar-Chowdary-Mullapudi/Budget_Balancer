@@ -41,7 +41,7 @@ function createTransport() {
       user: process.env.SMTP_USER,
       pass,
     },
-    family: 4,
+    family: process.env.SMTP_FAMILY === '4' ? 4 : undefined,
     tls: {
       minVersion: 'TLSv1.2',
       rejectUnauthorized: !insecureTls,
