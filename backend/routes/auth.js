@@ -114,8 +114,19 @@ router.post('/forgot-password', async (req, res, next) => {
         payload.emailSent = true
       } catch (err) {
         console.error('Password reset email failed:', err.message)
+        // Local/dev: don't block the user — show the link on screen
+        if (process.env.NODE_ENV !== 'production') {
+          payload.resetUrl = resetPath
+          payload.emailSent = false
+          payload.message =
+            'Could not send email (' +
+            (err.response || err.code || err.message) +
+            '). Use the reset link below (dev fallback).'
+          return res.json(payload)
+        }
         return res.status(503).json({
           message: 'Could not send reset email. Check SMTP settings in backend .env',
+          detail: err.message,
         })
       }
     } else if (process.env.NODE_ENV !== 'production') {

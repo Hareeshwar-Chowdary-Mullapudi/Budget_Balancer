@@ -26,14 +26,21 @@ export function getFrontendOrigin() {
 function createTransport() {
   // Gmail app passwords are often copied with spaces — strip them
   const pass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '')
+  const port = Number(process.env.SMTP_PORT || 587)
+  const secure = process.env.SMTP_SECURE === 'true' || port === 465
+
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: process.env.SMTP_SECURE === 'true',
+    port,
+    secure,
+    requireTLS: !secure,
     auth: {
       user: process.env.SMTP_USER,
       pass,
     },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
   })
 }
 
@@ -42,6 +49,7 @@ export async function sendPasswordResetEmail(to, resetUrl) {
     throw new Error('Email is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS in backend .env')
   }
 
+  // Gmail is happiest when From matches the authenticated user
   const from = process.env.EMAIL_FROM || process.env.SMTP_USER
   const transporter = createTransport()
 
