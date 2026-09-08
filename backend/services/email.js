@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import os from 'os'
 
 export function isEmailConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
@@ -23,11 +24,13 @@ export function getFrontendOrigin() {
 }
 
 function createTransport() {
-  // Gmail app passwords are often copied with spaces — strip them
   const pass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '')
-  // Prefer 587 + STARTTLS on Windows (465 often hits ESOCKET / CA errors)
   const port = Number(process.env.SMTP_PORT || 587)
   const secure = process.env.SMTP_SECURE === 'true' || port === 465
+
+  const insecureTls =
+    process.env.SMTP_INSECURE_TLS === 'true' ||
+    (process.env.NODE_ENV !== 'production' && os.platform() === 'win32')
 
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -38,8 +41,11 @@ function createTransport() {
       user: process.env.SMTP_USER,
       pass,
     },
+    family: 4,
     tls: {
       minVersion: 'TLSv1.2',
+      rejectUnauthorized: !insecureTls,
+      servername: process.env.SMTP_HOST || 'smtp.gmail.com',
     },
     connectionTimeout: 20000,
     greetingTimeout: 20000,
@@ -63,7 +69,7 @@ export async function sendPasswordResetEmail(to, resetUrl) {
       text: [
         'You requested a password reset for your BudgetWise account.',
         '',
-        `Open this link to set a new password (valid for 1 hour):`,
+        'Open this link to set a new password (valid for 1 hour):',
         resetUrl,
         '',
         'If you did not request this, you can ignore this email.',
@@ -77,7 +83,7 @@ export async function sendPasswordResetEmail(to, resetUrl) {
   } catch (err) {
     const hint =
       err.code === 'ESOCKET' || /certificate|socket/i.test(err.message)
-        ? ' On Windows run: cd backend && npm run dev (uses --use-system-ca). Or keep using the on-screen reset link.'
+        ? ' Tip: set SMTP_INSECURE_TLS=true in backend/.env for local Windows, restart with npm run dev, or use the on-screen reset link.'
         : ''
     err.message = `${err.code || 'SMTP'}: ${err.message}${hint}`
     throw err
