@@ -4,6 +4,11 @@ import crypto from 'crypto'
 import User from '../models/User.js'
 import auth from '../middleware/auth.js'
 import { isValidEmail, normalizeEmail } from '../utils/validate.js'
+import {
+  getFrontendOrigin,
+  isEmailConfigured,
+  sendPasswordResetEmail,
+} from '../services/email.js'
 
 const router = Router()
 
@@ -88,7 +93,7 @@ router.post('/forgot-password', async (req, res, next) => {
     )
 
     const message =
-      'If an account exists for that email, you can use the reset link to choose a new password.'
+      'If an account exists for that email, a password reset link has been sent.'
 
     if (!user) {
       return res.json({ message })
@@ -99,9 +104,31 @@ router.post('/forgot-password', async (req, res, next) => {
     user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000)
     await user.save()
 
+    const resetPath = `/reset-password?token=${resetToken}`
+    const resetUrl = `${getFrontendOrigin()}${resetPath}`
     const payload = { message }
-    if (process.env.NODE_ENV !== 'production') {
-      payload.resetUrl = `/reset-password?token=${resetToken}`
+
+    if (isEmailConfigured()) {
+      try {
+        await sendPasswordResetEmail(user.email, resetUrl)
+        payload.emailSent = true
+      } catch (err) {
+        console.error('Password reset email failed:', err.message)
+        return res.status(503).json({
+          message: 'Could not send reset email. Check SMTP settings in backend .env',
+        })
+      }
+    } else if (process.env.NODE_ENV !== 'production') {
+      // Local fallback when SMTP is not set — show link in the UI
+      payload.resetUrl = resetPath
+      payload.emailSent = false
+      payload.message =
+        'Email is not configured. Use the reset link below (dev only).'
+    } else {
+      console.error('SMTP not configured — cannot send password reset email in production')
+      return res.status(503).json({
+        message: 'Password reset email is not configured on the server',
+      })
     }
 
     res.json(payload)
@@ -130,8 +157,8 @@ router.post('/reset-password', async (req, res, next) => {
     }
 
     user.password = password
-    user.resetPasswordToken = undefined
-    user.resetPasswordExpires = undefined
+    user.resetPasswordToken = null
+    user.resetPasswordExpires = null
     await user.save()
 
     res.json({ message: 'Password updated. You can log in now.' })

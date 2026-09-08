@@ -53,7 +53,7 @@ export default function ForgotPassword() {
 
         {resetUrl && (
           <p className="muted small">
-            Dev reset link:{' '}
+            Dev reset link (SMTP not set):{' '}
             <Link to={resetUrl} className="link">
               Set new password
             </Link>

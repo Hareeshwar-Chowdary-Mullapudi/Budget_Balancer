@@ -8,7 +8,7 @@ import transactionRoutes from './routes/transactions.js'
 import adviceRoutes from './routes/advice.js'
 
 const allowedOrigins = process.env.CLIENT_ORIGIN
-  ? process.env.CLIENT_ORIGIN.split(',')
+  ? process.env.CLIENT_ORIGIN.split(/,|\|\|/)
       .map((o) => o.trim().replace(/\/$/, ''))
       .filter(Boolean)
   : null
@@ -45,6 +45,11 @@ app.listen(PORT, () => {
     console.log('Groq AI: configured')
   } else {
     console.log('Groq AI: GROQ_API_KEY missing in .env')
+  }
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    console.log('Email (password reset): configured')
+  } else {
+    console.log('Email (password reset): SMTP not set — dev link fallback')
   }
 })
 

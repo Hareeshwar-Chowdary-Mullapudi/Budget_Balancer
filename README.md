@@ -5,7 +5,7 @@ A full-stack budget tracker. Sign up, log income and expenses, see **monthly** t
 - **Frontend:** React 19 + Vite + React Router
 - **Backend:** Node.js + Express 5 REST API
 - **Database:** MongoDB (Mongoose)
-- **Auth:** Email/password (bcrypt + JWT)
+- **Auth:** Email/password (bcrypt + JWT) + forgot/reset password via email
 - **AI:** Groq (optional)
 
 ## Features
@@ -22,7 +22,7 @@ budgetWise/
 ├── backend/           # Express API
 │   ├── models/        # User, Transaction
 │   ├── routes/        # auth, transactions, advice
-│   ├── services/      # AI chat (Groq)
+│   ├── services/      # AI chat (Groq), email (password reset)
 │   └── utils/         # summary, validation
 └── my-react-app/      # React SPA
     └── src/
@@ -51,7 +51,9 @@ npm run dev             # http://localhost:5000
 | -------- | ----------- |
 | `MONGO_URI` | MongoDB connection string |
 | `JWT_SECRET` | Secret for signing JWTs (required in production) |
-| `CLIENT_ORIGIN` | Frontend URL for CORS, e.g. `http://localhost:5173` |
+| `CLIENT_ORIGIN` | Frontend URL for CORS (comma-separated if multiple) |
+| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | SMTP for password-reset emails (optional in local dev) |
+| `EMAIL_FROM` | From address for reset emails |
 | `GROQ_API_KEY` | Groq API key for AI chat (optional) |
 | `GROQ_MODEL` | Groq model ID (default: `openai/gpt-oss-120b`) |
 
@@ -68,7 +70,7 @@ Vite proxies `/api` to `http://localhost:5000` when `VITE_API_URL` is empty.
 
 ## Production
 
-**Backend:** Set `NODE_ENV=production`, `MONGO_URI`, `JWT_SECRET`, `CLIENT_ORIGIN`, and `GROQ_API_KEY`. Start with `npm start`.
+**Backend:** Set `NODE_ENV=production`, `MONGO_URI`, `JWT_SECRET`, `CLIENT_ORIGIN`, `GROQ_API_KEY`, and SMTP vars (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`) for password-reset emails. Start with `npm start`.
 
 **Frontend:** Set `VITE_API_URL` to your deployed API origin (no `/api` suffix). Build with `npm run build` and deploy `dist/`.
 
@@ -80,6 +82,8 @@ Protected routes need `Authorization: Bearer <token>`.
 | ------ | -------- | ----------- |
 | POST | `/api/auth/signup` | Create account |
 | POST | `/api/auth/login` | Log in |
+| POST | `/api/auth/forgot-password` | Email a password reset link |
+| POST | `/api/auth/reset-password` | Set a new password with reset token |
 | GET | `/api/auth/me` | Current user |
 | GET | `/api/transactions` | List + monthly summary |
 | POST | `/api/transactions` | Add transaction |
