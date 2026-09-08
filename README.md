@@ -26,7 +26,7 @@ budgetWise/
 │   └── utils/         # summary, validation
 └── my-react-app/      # React SPA
     └── src/
-        ├── pages/     # Home, Login, Signup, Dashboard, TransactionHistory, AllTransactions
+        ├── pages/     # Home, Login, Signup, Forgot/ResetPassword, Dashboard, history pages
         ├── components/
         └── hooks/
 ```

@@ -4,23 +4,35 @@ export function isEmailConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
 }
 
-/** First frontend origin from FRONTEND_URL or CLIENT_ORIGIN (comma / || separated). */
+/** Prefer FRONTEND_URL; else first CLIENT_ORIGIN (non-localhost in production). */
 export function getFrontendOrigin() {
-  const raw = process.env.FRONTEND_URL || process.env.CLIENT_ORIGIN || 'http://localhost:5173'
-  return raw
+  if (process.env.FRONTEND_URL?.trim()) {
+    return process.env.FRONTEND_URL.trim().replace(/\/$/, '')
+  }
+
+  const origins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
     .split(/,|\|\|/)
     .map((o) => o.trim().replace(/\/$/, ''))
-    .find(Boolean) || 'http://localhost:5173'
+    .filter(Boolean)
+
+  if (process.env.NODE_ENV === 'production') {
+    const hosted = origins.find((o) => !/localhost|127\.0\.0\.1/i.test(o))
+    if (hosted) return hosted
+  }
+
+  return origins[0] || 'http://localhost:5173'
 }
 
 function createTransport() {
+  // Gmail app passwords are often copied with spaces — strip them
+  const pass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '')
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 587),
     secure: process.env.SMTP_SECURE === 'true',
     auth: {
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      pass,
     },
   })
 }
